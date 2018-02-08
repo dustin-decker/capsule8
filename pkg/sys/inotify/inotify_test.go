@@ -17,6 +17,7 @@ package inotify
 import (
 	"io/ioutil"
 	"os"
+	"syscall"
 	"testing"
 	"time"
 
@@ -150,7 +151,14 @@ func TestFiveFiles(t *testing.T) {
 
 // TestStressInotifyInstances checks inotify.Instance for file descriptor leaks
 func TestStressInotifyInstances(t *testing.T) {
-	for i := 0; i < 8000; i++ {
+	var limit syscall.Rlimit
+	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &limit); err != nil {
+		t.Error(err)
+	}
+
+	// limit.Cur is soft limit that the kernel enforces.
+	// an unprivileged process can set its soft limit up to the hard limit (limit.Max)
+	for i := 0; i < int(limit.Max)+100; i++ {
 		in, err := NewInstance()
 		if err != nil {
 			t.Error(err)
