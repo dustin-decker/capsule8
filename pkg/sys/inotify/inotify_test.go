@@ -161,7 +161,8 @@ func TestStressInotifyInstances(t *testing.T) {
 	for i := 0; i < int(limit.Max)+100; i++ {
 		in, err := NewInstance()
 		if err != nil {
-			t.Error(err)
+			t.Errorf("soft fd limit is %v, hard fd limit is %v, got error: %v",
+				limit.Cur, limit.Max, err.Error())
 			break
 		}
 		in.Close()
