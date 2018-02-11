@@ -17,11 +17,11 @@ package main
 /*
 EXAMPLES
 
-$ sudo ./kprobe -output 'sockfd=%di sin_family=+0(%si):u16 sin_port=+2(%si):u16 sin_addr=+4(%si):u32' SyS_connect
+$ sudo ./bin/kprobe -fetchargs 'sockfd=%di sin_family=+0(%si):u16 sin_port=+2(%si):u16 sin_addr=+4(%si):u32' -symbol SyS_connect
 {"__probe_ip":18446744072118372864,"common_flags":1,"common_pid":11267,"common_preempt_count":0,"common_type":1627,"sin_addr":16777343,"sin_family":2,"sin_port":53764,"sockfd":3}
 [...]
 
-$sudo bin/kprobe -output 'dfd=%di:s32 filename=+0(%si):string flags=%dx:s32 mode=%cx:s32' do_sys_open
+$ sudo ./bin/kprobe -fetchargs 'dfd=%di:s32 filename=+0(%si):string flags=%dx:s32 mode=%cx:s32' -symbol do_sys_open
 {"__probe_ip":18446744072308927968,"common_flags":1,"common_pid":1108,"common_preempt_count":0,"common_type":1593,"dfd":4294967196,"filename":"/proc/stat","flags":32768,"mode":438}
 */
 
