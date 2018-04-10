@@ -17,9 +17,13 @@ package inotify
 import (
 	"io/ioutil"
 	"os"
-	"syscall"
+	"path"
+	"strconv"
+	"strings"
 	"testing"
 	"time"
+
+	"github.com/capsule8/capsule8/pkg/sys"
 
 	"github.com/capsule8/capsule8/pkg/stream"
 	"golang.org/x/sys/unix"
@@ -151,18 +155,23 @@ func TestFiveFiles(t *testing.T) {
 
 // TestStressInotifyInstances checks inotify.Instance for file descriptor leaks
 func TestStressInotifyInstances(t *testing.T) {
-	var limit syscall.Rlimit
-	if err := syscall.Getrlimit(syscall.RLIMIT_NOFILE, &limit); err != nil {
+	// get max inotify instances for the container or host
+	procFS := sys.ProcFS().MountPoint
+	f, err := ioutil.ReadFile(path.Join(procFS, "sys/fs/inotify/max_user_instances"))
+	if err != nil {
 		t.Error(err)
 	}
+	mw, err := strconv.ParseUint(strings.TrimSpace(string(f)), 10, 64)
+	if err != nil {
+		t.Error(err)
+	}
+	maxWatches := uint64(mw)
 
-	// limit.Cur is soft limit that the kernel enforces.
-	// an unprivileged process can set its soft limit up to the hard limit (limit.Max)
-	for i := 0; i < int(limit.Max)+100; i++ {
+	// try more instances than the inotify instance limit
+	for i := uint64(0); i < maxWatches+uint64(1000); i++ {
 		in, err := NewInstance()
 		if err != nil {
-			t.Errorf("soft fd limit is %v, hard fd limit is %v, got error: %v",
-				limit.Cur, limit.Max, err.Error())
+			t.Error(err)
 			break
 		}
 		in.Close()
